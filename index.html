@@ -6,86 +6,8 @@
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
-  <script>
-    AFRAME.registerShader('fire-chroma', {
-      schema: {
-        src: { type: 'map', is: 'uniform' }
-      },
-
-      init: function () {
-        this.material = new THREE.ShaderMaterial({
-          uniforms: {
-            src: {
-              value: null
-            }
-          },
-
-          vertexShader: `
-            varying vec2 vUv;
-
-            void main() {
-              vUv = uv;
-
-              gl_Position =
-                projectionMatrix *
-                modelViewMatrix *
-                vec4(position, 1.0);
-            }
-          `,
-
-          fragmentShader: `
-            uniform sampler2D src;
-            varying vec2 vUv;
-
-            void main() {
-
-              vec4 color = texture2D(src, vUv);
-
-              float brightness =
-                max(color.r, max(color.g, color.b));
-
-              /*
-               * Make the dark/black background transparent.
-               * Bright fire remains visible.
-               */
-              float alpha = smoothstep(
-                0.04,
-                0.18,
-                brightness
-              );
-
-              /*
-               * Slightly reduce dark grey edges
-               * while keeping the fire.
-               */
-              if (brightness < 0.025) {
-                discard;
-              }
-
-              gl_FragColor = vec4(
-                color.rgb,
-                color.a * alpha
-              );
-            }
-          `,
-
-          transparent: true,
-          side: THREE.DoubleSide,
-          depthWrite: false
-        });
-      },
-
-      update: function (data) {
-        if (data.src) {
-          this.material.uniforms.src.value = data.src;
-        }
-      }
-    });
-  </script>
-
   <style>
-    html,
-    body {
+    html, body {
       margin: 0;
       padding: 0;
       width: 100%;
@@ -93,31 +15,40 @@
       overflow: hidden;
       background: black;
     }
+
+    #fireCanvas {
+      display: none;
+    }
   </style>
 </head>
 
 <body>
 
+  <!-- Hidden video -->
+  <video
+    id="fireVideo"
+    src="./fire-ar.mp4"
+    loop
+    muted
+    playsinline
+    webkit-playsinline
+    crossorigin="anonymous"
+    style="display:none;">
+  </video>
+
+  <!-- Transparent processed video -->
+  <canvas
+    id="fireCanvas"
+    width="1280"
+    height="720">
+  </canvas>
+
   <a-scene
     mindar-image="imageTargetSrc: ./what-the-fire-left.mind;"
     color-space="sRGB"
-    renderer="colorManagement: true, physicallyCorrectLights"
+    renderer="colorManagement: true, physicallyCorrectLights; alpha: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
-
-    <a-assets>
-
-      <video
-        id="fireVideo"
-        src="./fire-ar.mp4"
-        loop
-        muted
-        playsinline
-        webkit-playsinline
-        crossorigin="anonymous">
-      </video>
-
-    </a-assets>
 
     <a-camera
       position="0 0 0"
@@ -126,71 +57,172 @@
 
     <a-entity mindar-image-target="targetIndex: 0">
 
-      <a-video
-        src="#fireVideo"
+      <a-plane
+        id="firePlane"
         position="0 -0.25 0"
         width="1"
         height="0.5625"
-        material="shader: fire-chroma;">
-      </a-video>
+        material="src: #fireCanvas; transparent: true; alphaTest: 0.01; side: double;">
+      </a-plane>
 
     </a-entity>
 
   </a-scene>
 
+
   <script>
+
+    const video = document.getElementById("fireVideo");
+    const canvas = document.getElementById("fireCanvas");
+    const ctx = canvas.getContext("2d", {
+      willReadFrequently: true
+    });
 
     const target = document.querySelector(
       '[mindar-image-target]'
     );
 
-    const video = document.querySelector(
-      '#fireVideo'
+    let processing = false;
+
+
+    /*
+     * Remove the black background from every video frame.
+     */
+    function processFire() {
+
+      if (!processing) return;
+
+      if (video.readyState >= 2) {
+
+        ctx.drawImage(
+          video,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        const imageData = ctx.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        const pixels = imageData.data;
+
+        for (let i = 0; i < pixels.length; i += 4) {
+
+          const r = pixels[i];
+          const g = pixels[i + 1];
+          const b = pixels[i + 2];
+
+          /*
+           * Brightness of the pixel.
+           */
+          const brightness =
+            Math.max(r, g, b);
+
+          /*
+           * Make black/dark pixels transparent.
+           *
+           * Pure black = completely transparent.
+           * Fire colours = remain visible.
+           */
+          if (brightness < 35) {
+
+            pixels[i + 3] = 0;
+
+          } else if (brightness < 70) {
+
+            /*
+             * Smooth transition around
+             * the edge of the fire.
+             */
+            pixels[i + 3] =
+              Math.round(
+                ((brightness - 35) / 35) * 255
+              );
+
+          } else {
+
+            pixels[i + 3] = 255;
+
+          }
+        }
+
+        ctx.putImageData(
+          imageData,
+          0,
+          0
+        );
+      }
+
+      requestAnimationFrame(processFire);
+    }
+
+
+    /*
+     * Start processing when the artwork
+     * is detected.
+     */
+    target.addEventListener(
+      "targetFound",
+      () => {
+
+        processing = true;
+
+        video.currentTime = 0;
+
+        video.play().catch(error => {
+          console.log(
+            "Video play failed:",
+            error
+          );
+        });
+
+        processFire();
+      }
     );
 
-    // Start the fire when the artwork is detected
-    target.addEventListener('targetFound', () => {
 
-      video.currentTime = 0;
+    /*
+     * Stop when artwork is lost.
+     */
+    target.addEventListener(
+      "targetLost",
+      () => {
 
-      video.play().catch(error => {
-        console.log(
-          'Video play failed:',
-          error
-        );
-      });
+        processing = false;
 
-    });
+        video.pause();
+      }
+    );
 
-    // Pause when artwork leaves the camera
-    target.addEventListener('targetLost', () => {
 
-      video.pause();
+    /*
+     * Mobile browser fallback.
+     */
+    document.addEventListener(
+      "touchstart",
+      () => {
 
-    });
+        video.play().catch(() => {});
 
-    // Mobile browser fallback
-    document.addEventListener('touchstart', () => {
+      },
+      { once: true }
+    );
 
-      video.play().catch(error => {
-        console.log(
-          'Touch play failed:',
-          error
-        );
-      });
 
-    }, { once: true });
+    document.addEventListener(
+      "click",
+      () => {
 
-    document.addEventListener('click', () => {
+        video.play().catch(() => {});
 
-      video.play().catch(error => {
-        console.log(
-          'Click play failed:',
-          error
-        );
-      });
-
-    }, { once: true });
+      },
+      { once: true }
+    );
 
   </script>
 
