@@ -16,6 +16,17 @@
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
 
+    <a-assets>
+  <video
+    id="fireVideo"
+    src="./fire-ar.mp4"
+    loop
+    muted
+    playsinline
+    crossorigin="anonymous">
+  </video>
+    </a-assets>
+
     <a-camera
       position="0 0 0"
       look-controls="enabled: false">
@@ -24,28 +35,13 @@
     <a-entity mindar-image-target="targetIndex: 0">
 
      <a-video
-  src="#fireVideo"
-  position="0 -0.25 0"
-  width="1"
-  height="0.5625"
-  autoplay
-  loop
-  muted
-  playsinline>
-     </a-video>
+      src="#fireVideo"
+      position="0 -0.25 0"
+      width="1"
+      height="0.5625">
+    </a-video>
 
     </a-entity>
-    
-   <video
-  id="fireVideo"
-  src="./fire-ar.mp4"
-  autoplay
-  loop
-  muted
-  playsinline
-  crossorigin="anonymous"
-  style="display:none">
-   </video>
     
   </a-scene>
 
