@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Letter — Days of Future Past</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:#141414;
+    --silver-1:#c9cbcd;
+    --silver-2:#e6e7e8;
+    --silver-3:#9a9c9e;
+    --wall:#0e0f10;
+    --brass:#9a7b4f;
+    --paper:#ece7dd;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at 50% 0%, #1a1b1c 0%, var(--wall) 55%);
+    color:var(--paper);
+    font-family:'Cormorant Garamond', serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .frame{
+    max-width:640px;
+    margin:0 auto;
+    padding:64px 22px 100px;
+  }
+
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--silver-3);
+    text-align:center;
+    margin-bottom:8px;
+  }
+
+  .series{
+    text-align:center;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    color:var(--brass);
+    margin-bottom:48px;
+    text-transform:uppercase;
+  }
+
+  /* --- the plaque, styled after the mirrored artwork --- */
+  .plaque{
+    position:relative;
+    background:linear-gradient(155deg, var(--silver-2) 0%, var(--silver-1) 45%, var(--silver-3) 100%);
+    border:10px solid #1c1a17;
+    border-radius:2px;
+    padding:52px 34px 40px;
+    box-shadow:
+      0 30px 60px -20px rgba(0,0,0,0.7),
+      inset 0 0 40px rgba(0,0,0,0.08);
+    overflow:hidden;
+  }
+
+  .plaque::before{
+    /* faint mirror sheen */
+    content:"";
+    position:absolute;
+    top:0; left:-40%;
+    width:45%; height:100%;
+    background:linear-gradient(100deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform:skewX(-12deg);
+    pointer-events:none;
+  }
+
+  .dear{
+    font-family:'UnifrakturMaguntia', cursive;
+    font-size:clamp(30px, 8vw, 44px);
+    color:var(--ink);
+    text-align:center;
+    margin:0 0 6px;
+    line-height:1.1;
+  }
+
+  .keep-creating{
+    font-family:'Bebas Neue', sans-serif;
+    letter-spacing:0.03em;
+    font-size:clamp(40px, 13vw, 64px);
+    color:var(--ink);
+    text-align:center;
+    line-height:0.92;
+    margin:2px 0 10px;
+  }
+
+  /* SVG drip divider — the signature element */
+  .drip{
+    display:block;
+    width:100%;
+    height:46px;
+    margin:0 auto 22px;
+  }
+  .drip path{
+    stroke:var(--ink);
+    stroke-width:3;
+    fill:var(--ink);
+    stroke-dasharray:400;
+    stroke-dashoffset:400;
+    animation:bleed 1.8s ease-out forwards;
+    animation-delay:0.3s;
+  }
+  @keyframes bleed{
+    to{ stroke-dashoffset:0; }
+  }
+
+  .letter-body{
+    color:#1c1c1c;
+    font-size:19px;
+    line-height:1.65;
+    text-align:left;
+  }
+
+  .letter-body p{ margin:0 0 20px; }
+  .letter-body p:last-child{ margin-bottom:0; }
+
+  .signoff{
+    margin-top:28px;
+    font-style:italic;
+    text-align:right;
+    color:#2a2a2a;
+  }
+
+  .smiley{
+    display:block;
+    margin:28px auto 4px;
+    width:46px;
+    height:46px;
+    opacity:0.85;
+  }
+
+  /* --- reply section --- */
+  .reply-wrap{
+    margin-top:56px;
+  }
+
+  .reply-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--brass);
+    text-align:center;
+    margin-bottom:6px;
+  }
+
+  .reply-title{
+    font-family:'Bebas Neue', sans-serif;
+    font-size:28px;
+    letter-spacing:0.02em;
+    text-align:center;
+    color:var(--paper);
+    margin:0 0 10px;
+  }
+
+  .reply-sub{
+    text-align:center;
+    color:var(--silver-3);
+    font-size:16px;
+    margin:0 0 28px;
+    font-style:italic;
+  }
+
+  form{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+
+  textarea, input[type="text"]{
+    width:100%;
+    background:#1a1a1a;
+    border:1px solid #33312e;
+    border-radius:2px;
+    color:var(--paper);
+    font-family:'Cormorant Garamond', serif;
+    font-size:18px;
+    padding:16px;
+    resize:vertical;
+    min-height:130px;
+  }
+
+  input[type="text"]{ min-height:auto; }
+
+  textarea:focus, input[type="text"]:focus{
+    outline:2px solid var(--brass);
+    outline-offset:1px;
+  }
+
+  textarea::placeholder, input::placeholder{
+    color:#6f6d68;
+    font-style:italic;
+  }
+
+  button{
+    align-self:center;
+    margin-top:6px;
+    background:transparent;
+    border:1px solid var(--brass);
+    color:var(--brass);
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    padding:14px 34px;
+    cursor:pointer;
+    transition:background 0.25s ease, color 0.25s ease;
+  }
+
+  button:hover{ background:var(--brass); color:#141414; }
+  button:focus-visible{ outline:2px solid var(--paper); outline-offset:3px; }
+
+  .privacy-note{
+    text-align:center;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:#65635e;
+    margin-top:14px;
+    letter-spacing:0.02em;
+  }
+
+  .status{
+    text-align:center;
+    font-size:16px;
+    margin-top:18px;
+    min-height:20px;
+  }
+  .status.ok{ color:#9fd8a0; }
+  .status.err{ color:#e2938a; }
+
+  /* honeypot */
+  .hp{ position:absolute; left:-9999px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .drip path{ animation:none; stroke-dashoffset:0; }
+    html{ scroll-behavior:auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="frame">
+
+  <div class="eyebrow">Days of Future Past</div>
+  <div class="series">The Letter — 5 of 9</div>
+
+  <div class="plaque">
+    <p class="dear">Dear Artists,</p>
+    <h1 class="keep-creating">Keep Creating.</h1>
+
+    <svg class="drip" viewBox="0 0 300 46" preserveAspectRatio="none">
+      <path d="M10,4 L10,20 Q10,30 6,40 Q10,44 14,40 Q10,30 10,20 Z" />
+      <path d="M60,4 L60,14 Q60,26 55,36 Q60,42 65,36 Q60,26 60,14 Z" />
+      <path d="M120,4 L120,22 Q120,32 116,44 Q120,46 124,44 Q120,32 120,22 Z" />
+      <path d="M180,4 L180,16 Q180,24 176,30 Q180,34 184,30 Q180,24 180,16 Z" />
+      <path d="M240,4 L240,18 Q240,30 236,42 Q240,45 244,42 Q240,30 240,18 Z" />
+      <path d="M290,4 L290,12 Q290,20 286,26 Q290,30 294,26 Q290,20 290,12 Z" />
+    </svg>
+
+    <div class="letter-body">
+      <p>Do not think this letter doesn't concern you. It does. You are an artist. The one who almost quit last winter, the one still deciding whether to call the thing you make "real" work, the one standing here right now seeing your own reflection in the surface before you've read a single word.</p>
+
+      <p>That's the point. This piece was never just about paint. It's a passage to an alternate timeline, because the struggle it describes was never abstract. It was yours.</p>
+
+      <p>It began as the <strong>Weight of the Grind</strong>, the labor before anything was visible. Somewhere inside it, a <strong>Quiet Bloom</strong>, a private moment of beauty no one else saw. You kept going anyway. <strong>Still Breathing</strong>, holding on under pressure what should have broken you. Until it did ; <strong>BANKAI!</strong>, the final release, the point where everything you'd been carrying finally erupted.</p>
+
+      <p>That's probably where you're standing now. The pivot. The middle of the grid, the middle of the story.</p>
+
+      <p>And it doesn't end here. On the other side awaits a <strong>Fractured Focus</strong>, the moment everything starts finding shape again. <strong>What the Fire Kept</strong>; you'll survive the burning more than you think and then with <strong>Assembled Memory</strong>, comes the past rebuilt, piece by piece, into something you can finally hold. And then your <strong>Future Self</strong>, looking back at who you've now become, you'll be grateful you didn't stop. Every unfinished sketch, every project you were too afraid to show anyone, every season where nothing came out right, none of it was wasted. It was material. Slow, quiet, necessary material for what you've become.</p>
+
+      <p>Today's struggle is tomorrow's foundation. That's not a comforting phrase someone printed on a mug. It's just how this works. The people you admire now, were once exactly where you are, mid-doubt, but still going.</p>
+
+      <p>So keep creating. Not because it's easy, and not because anyone is watching. Because one day, this exact struggle becomes part of the legacy you didn't know you were building.</p>
+
+      <p>You don't need to reply. Just remember this the next time you want to quit.</p>
+    </div>
+
+    <p class="signoff">— with hope, from <em>Izani</em>.</p>
+
+    <svg class="smiley" viewBox="0 0 100 100" fill="none" stroke="#1c1c1c" stroke-width="4">
+      <circle cx="50" cy="50" r="38"/>
+      <line x1="34" y1="42" x2="34" y2="58"/>
+      <line x1="58" y1="42" x2="58" y2="58"/>
+      <path d="M28,64 Q50,86 74,60" stroke-linecap="round" fill="none"/>
+    </svg>
+  </div>
+
+  <div class="reply-wrap">
+    <div class="reply-label">Complete the letter</div>
+    <h2 class="reply-title">Drop a thought</h2>
+    <p class="reply-sub">Reply to the letter. It won't be posted anywhere — it comes straight to me.</p>
+
+    <form id="letterForm" action="https://formspree.io/f/xnpavzgz" method="POST">
+      <input type="text" name="name" placeholder="Your name or leave it blank">
+      <input type="text" name="_gotcha" class="hp" tabindex="-1" autocomplete="off">
+      <textarea name="message" placeholder="Write what you needed to hear back..." required></textarea>
+      <button type="submit">Send it quietly</button>
+      <p class="status" id="formStatus" role="status" aria-live="polite"></p>
+    </form>
+
+    <p class="privacy-note">Private &amp; unpublished — only the artist reads this.</p>
+  </div>
+
+</div>
+
+<script>
+  const form = document.getElementById('letterForm');
+  const status = document.getElementById('formStatus');
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    status.textContent = 'Sending...';
+    status.className = 'status';
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (response.ok) {
+        form.reset();
+        status.textContent = 'Received. Thank you for keeping creating.';
+        status.className = 'status ok';
+      } else {
+        status.textContent = 'Something went wrong. Please try again.';
+        status.className = 'status err';
+      }
+    } catch (err) {
+      status.textContent = 'Something went wrong. Please try again.';
+      status.className = 'status err';
+    }
+  });
+</script>
+
+</body>
+</html>
