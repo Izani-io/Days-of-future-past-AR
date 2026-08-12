@@ -5,6 +5,62 @@
 
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <script>
+AFRAME.registerShader('fire-chroma', {
+  schema: {
+    src: { type: 'map', is: 'uniform' }
+  },
+
+  vertexShader: `
+    varying vec2 vUv;
+
+    void main() {
+      vUv = uv;
+
+      gl_Position =
+        projectionMatrix *
+        modelViewMatrix *
+        vec4(position, 1.0);
+    }
+  `,
+
+  fragmentShader: `
+    precision mediump float;
+
+    uniform sampler2D src;
+    varying vec2 vUv;
+
+    void main() {
+
+      vec4 color = texture2D(src, vUv);
+
+      float brightness =
+        max(color.r, max(color.g, color.b));
+
+      /*
+       * Remove the black background.
+       */
+      float alpha = smoothstep(
+        0.03,
+        0.16,
+        brightness
+      );
+
+      /*
+       * Completely remove very dark pixels.
+       */
+      if (brightness < 0.03) {
+        discard;
+      }
+
+      gl_FragColor = vec4(
+        color.rgb,
+        alpha
+      );
+    }
+  `
+});
+</script>
 </head>
 
 <body>
@@ -38,11 +94,12 @@
     <a-entity mindar-image-target="targetIndex: 0">
 
       <a-video
-        src="#fireVideo"
-        position="0 -0.25 0"
-        width="1"
-        height="0.5625">
-      </a-video>
+  src="#fireVideo"
+  position="0 -0.25 0"
+  width="1"
+  height="0.5625"
+  material="shader: fire-chroma; src: #fireVideo; transparent: true; side: double;">
+</a-video>
 
     </a-entity>
 
