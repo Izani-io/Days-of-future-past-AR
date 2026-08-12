@@ -45,5 +45,18 @@
     
   </a-scene>
 
+  <script>
+  const target = document.querySelector('[mindar-image-target]');
+  const video = document.querySelector('#fireVideo');
+
+  target.addEventListener('targetFound', () => {
+    video.play();
+  });
+
+  target.addEventListener('targetLost', () => {
+    video.pause();
+  });
+</script>
+  
 </body>
 </html>
