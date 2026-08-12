@@ -49,13 +49,32 @@
   const target = document.querySelector('[mindar-image-target]');
   const video = document.querySelector('#fireVideo');
 
+  // Try to start the video when the artwork is detected
   target.addEventListener('targetFound', () => {
-    video.play();
+    video.currentTime = 0;
+    video.play().catch(error => {
+      console.log("Video play failed:", error);
+    });
   });
 
+  // Pause when the artwork is lost
   target.addEventListener('targetLost', () => {
     video.pause();
   });
+
+  // Mobile-browser fallback:
+  // Start the video after the user touches the screen.
+  document.addEventListener('touchstart', () => {
+    video.play().catch(error => {
+      console.log("Touch play failed:", error);
+    });
+  }, { once: true });
+
+  document.addEventListener('click', () => {
+    video.play().catch(error => {
+      console.log("Click play failed:", error);
+    });
+  }, { once: true });
 </script>
   
 </body>
