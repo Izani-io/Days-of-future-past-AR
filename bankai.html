@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+
+  <script>
+
+    /*
+     * WATER DROPLET CHROMA SHADER
+     *
+     * Removes the black/dark background
+     * while keeping the water droplets.
+     */
+
+    AFRAME.registerShader('water-chroma', {
+
+      schema: {
+        src: { type: 'map', is: 'uniform' }
+      },
+
+
+      vertexShader: `
+
+        varying vec2 vUv;
+
+        void main() {
+
+          vUv = uv;
+
+          gl_Position =
+            projectionMatrix *
+            modelViewMatrix *
+            vec4(position, 1.0);
+
+        }
+
+      `,
+
+
+      fragmentShader: `
+
+        precision mediump float;
+
+        uniform sampler2D src;
+
+        varying vec2 vUv;
+
+
+        void main() {
+
+          vec4 color =
+            texture2D(src, vUv);
+
+
+          /*
+           * Calculate brightness.
+           */
+
+          float brightness =
+            max(
+              color.r,
+              max(color.g, color.b)
+            );
+
+
+          /*
+           * Remove the dark background.
+           *
+           * Water droplets remain visible.
+           */
+
+          float alpha = smoothstep(
+            0.10,
+            0.30,
+            brightness
+          );
+
+
+          /*
+           * Completely remove
+           * very dark pixels.
+           */
+
+          if (brightness < 0.10) {
+            discard;
+          }
+
+
+          gl_FragColor = vec4(
+            color.rgb,
+            alpha
+          );
+
+        }
+
+      `
+
+    });
+
+  </script>
+
+</head>
+
+
+<body>
+
+
+  <a-scene
+
+    mindar-image="imageTargetSrc: ./bankai.mind;"
+
+    color-space="sRGB"
+
+    renderer="colorManagement: true, physicallyCorrectLights"
+
+    vr-mode-ui="enabled: false"
+
+    device-orientation-permission-ui="enabled: false">
+
+
+    <a-assets>
+
+
+      <video
+
+        id="waterVideo"
+
+        src="./bankai.mp4"
+
+        loop
+
+        muted
+
+        playsinline
+
+        webkit-playsinline
+
+        crossorigin="anonymous">
+
+      </video>
+
+
+    </a-assets>
+
+
+    <a-camera
+
+      position="0 0 0"
+
+      look-controls="enabled: false">
+
+    </a-camera>
+
+
+    <a-entity
+
+      mindar-image-target="targetIndex: 0">
+
+
+      <!-- FULL ARTWORK WATER OVERLAY -->
+
+      <a-entity
+
+        geometry="primitive: plane; width: 1; height: 1"
+
+        material="shader: water-chroma; src: #waterVideo; transparent: true; side: front; depthWrite: false"
+
+        position="0 0 0.01">
+
+      </a-entity>
+
+
+    </a-entity>
+
+
+  </a-scene>
+
+
+  <script>
+
+
+    const target =
+      document.querySelector(
+        '[mindar-image-target]'
+      );
+
+
+    const video =
+      document.querySelector(
+        '#waterVideo'
+      );
+
+
+    /*
+     * Start water animation
+     * when Bankai is detected.
+     */
+
+    target.addEventListener(
+
+      'targetFound',
+
+      () => {
+
+        video.currentTime = 0;
+
+        video.play().catch(error => {
+
+          console.log(
+            'Video play failed:',
+            error
+          );
+
+        });
+
+      }
+
+    );
+
+
+    /*
+     * Pause when Bankai
+     * leaves the camera.
+     */
+
+    target.addEventListener(
+
+      'targetLost',
+
+      () => {
+
+        video.pause();
+
+      }
+
+    );
+
+
+    /*
+     * Mobile playback fallback.
+     */
+
+    document.addEventListener(
+
+      'touchstart',
+
+      () => {
+
+        video.play().catch(() => {});
+
+      },
+
+      { once: true }
+
+    );
+
+
+    document.addEventListener(
+
+      'click',
+
+      () => {
+
+        video.play().catch(() => {});
+
+      },
+
+      { once: true }
+
+    );
+
+
+  </script>
+
+
+</body>
+
+</html>
