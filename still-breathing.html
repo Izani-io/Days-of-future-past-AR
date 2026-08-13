@@ -78,8 +78,8 @@
            */
 
           float alpha = smoothstep(
-            0.03,
-            0.25,
+            0.10,
+            0.30,
             brightness
           );
 
@@ -89,7 +89,7 @@
            * extremely dark pixels.
            */
 
-          if (brightness < 0.03) {
+          if (brightness < 0.10) {
             discard;
           }
 
