@@ -5,84 +5,97 @@
 
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
   <script>
-AFRAME.registerShader('fire-chroma', {
-  schema: {
-    src: { type: 'map', is: 'uniform' }
-  },
+    AFRAME.registerShader('effect-chroma', {
+      schema: {
+        src: { type: 'map', is: 'uniform' }
+      },
 
-  vertexShader: `
-    varying vec2 vUv;
+      vertexShader: `
+        varying vec2 vUv;
 
-    void main() {
-      vUv = uv;
+        void main() {
+          vUv = uv;
 
-      gl_Position =
-        projectionMatrix *
-        modelViewMatrix *
-        vec4(position, 1.0);
-    }
-  `,
+          gl_Position =
+            projectionMatrix *
+            modelViewMatrix *
+            vec4(position, 1.0);
+        }
+      `,
 
-  fragmentShader: `
-    precision mediump float;
+      fragmentShader: `
+        precision mediump float;
 
-    uniform sampler2D src;
-    varying vec2 vUv;
+        uniform sampler2D src;
+        varying vec2 vUv;
 
-    void main() {
+        void main() {
+          vec4 color = texture2D(src, vUv);
 
-      vec4 color = texture2D(src, vUv);
+          float brightness =
+            max(color.r, max(color.g, color.b));
 
-      float brightness =
-        max(color.r, max(color.g, color.b));
+          float alpha = smoothstep(
+            0.10,
+            0.30,
+            brightness
+          );
 
-      /*
-       * Remove the black background.
-       */
-      float alpha = smoothstep(
-        0.10,
-        0.30,
-        brightness
-      );
+          if (brightness < 0.10) {
+            discard;
+          }
 
-      /*
-       * Completely remove very dark pixels.
-       */
-      if (brightness < 0.10) {
-        discard;
-      }
-
-      gl_FragColor = vec4(
-        color.rgb,
-        alpha
-      );
-    }
-  `
-});
-</script>
+          gl_FragColor = vec4(color.rgb, alpha);
+        }
+      `
+    });
+  </script>
 </head>
 
 <body>
 
   <a-scene
-    mindar-image="imageTargetSrc: ./what-the-fire-left.mind;"
+    mindar-image="imageTargetSrc: ./collection.mind;"
     color-space="sRGB"
-    renderer="colorManagement: true, physicallyCorrectLights"
+    renderer="colorManagement: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false">
 
     <a-assets>
 
-      <video
-        id="fireVideo"
+      <video id="weightVideo"
+        src="./weight-of-the-grind.mp4"
+        loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+
+      <video id="quietVideo"
+        src="./quiet-bloom.mp4"
+        loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+
+      <video id="breathingVideo"
+        src="./still-breathing.mp4"
+        loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+
+      <video id="bankaiVideo"
+        src="./bankai.mp4"
+        loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+
+      <video id="fracturedVideo"
+        src="./fractured-focus.mp4"
+        loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+
+      <video id="fireVideo"
         src="./fire-ar.mp4"
-        loop
-        muted
-        playsinline
-        webkit-playsinline
-        crossorigin="anonymous">
-      </video>
+        loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+
+      <video id="memoryVideo"
+        src="./assembled-memory.mp4"
+        loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+
+      <video id="futureVideo"
+        src="./future-self.mp4"
+        loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
 
     </a-assets>
 
@@ -91,67 +104,178 @@ AFRAME.registerShader('fire-chroma', {
       look-controls="enabled: false">
     </a-camera>
 
-    <a-entity mindar-image-target="targetIndex: 0">
 
+    <!-- 1. WEIGHT OF THE GRIND -->
+    <a-entity id="target-weight" mindar-image-target="targetIndex: 0">
       <a-entity
         geometry="primitive: plane; width: 1; height: 1"
-        material="shader: fire-chroma; src: #fireVideo; transparent: true; side: front; depthWrite: false"
+        material="shader: effect-chroma; src: #weightVideo; transparent: true; side: front; depthWrite: false"
         position="0 0 0.01">
       </a-entity>
+    </a-entity>
 
+
+    <!-- 2. QUIET BLOOM -->
+    <a-entity id="target-quiet" mindar-image-target="targetIndex: 1">
+      <a-entity
+        geometry="primitive: plane; width: 1; height: 1"
+        material="shader: effect-chroma; src: #quietVideo; transparent: true; side: front; depthWrite: false"
+        position="0 0 0.01">
+      </a-entity>
+    </a-entity>
+
+
+    <!-- 3. STILL BREATHING -->
+    <a-entity id="target-breathing" mindar-image-target="targetIndex: 2">
+      <a-entity
+        geometry="primitive: plane; width: 1; height: 1"
+        material="shader: effect-chroma; src: #breathingVideo; transparent: true; side: front; depthWrite: false"
+        position="0 0 0.01">
+      </a-entity>
+    </a-entity>
+
+
+    <!-- 4. BANKAI -->
+    <a-entity id="target-bankai" mindar-image-target="targetIndex: 3">
+      <a-entity
+        geometry="primitive: plane; width: 1; height: 1"
+        material="shader: effect-chroma; src: #bankaiVideo; transparent: true; side: front; depthWrite: false"
+        position="0 0 0.01">
+      </a-entity>
+    </a-entity>
+
+
+    <!-- 5. FRACTURED FOCUS -->
+    <a-entity id="target-fractured" mindar-image-target="targetIndex: 4">
+      <a-entity
+        geometry="primitive: plane; width: 1; height: 1"
+        material="shader: effect-chroma; src: #fracturedVideo; transparent: true; side: front; depthWrite: false"
+        position="0 0 0.01">
+      </a-entity>
+    </a-entity>
+
+
+    <!-- 6. WHAT THE FIRE LEFT -->
+    <a-entity id="target-fire" mindar-image-target="targetIndex: 5">
+      <a-entity
+        geometry="primitive: plane; width: 1; height: 1"
+        material="shader: effect-chroma; src: #fireVideo; transparent: true; side: front; depthWrite: false"
+        position="0 0 0.01">
+      </a-entity>
+    </a-entity>
+
+
+    <!-- 7. ASSEMBLED MEMORY -->
+    <a-entity id="target-memory" mindar-image-target="targetIndex: 6">
+      <a-entity
+        geometry="primitive: plane; width: 1; height: 1"
+        material="shader: effect-chroma; src: #memoryVideo; transparent: true; side: front; depthWrite: false"
+        position="0 0 0.01">
+      </a-entity>
+    </a-entity>
+
+
+    <!-- 8. FUTURE SELF -->
+    <a-entity id="target-future" mindar-image-target="targetIndex: 7">
+      <a-entity
+        geometry="primitive: plane; width: 1; height: 1"
+        material="shader: effect-chroma; src: #futureVideo; transparent: true; side: front; depthWrite: false"
+        position="0 0 0.01">
+      </a-entity>
     </a-entity>
 
   </a-scene>
 
+
   <script>
+    const targets = [
+      {
+        target: document.querySelector('#target-weight'),
+        video: document.querySelector('#weightVideo')
+      },
+      {
+        target: document.querySelector('#target-quiet'),
+        video: document.querySelector('#quietVideo')
+      },
+      {
+        target: document.querySelector('#target-breathing'),
+        video: document.querySelector('#breathingVideo')
+      },
+      {
+        target: document.querySelector('#target-bankai'),
+        video: document.querySelector('#bankaiVideo')
+      },
+      {
+        target: document.querySelector('#target-fractured'),
+        video: document.querySelector('#fracturedVideo')
+      },
+      {
+        target: document.querySelector('#target-fire'),
+        video: document.querySelector('#fireVideo')
+      },
+      {
+        target: document.querySelector('#target-memory'),
+        video: document.querySelector('#memoryVideo')
+      },
+      {
+        target: document.querySelector('#target-future'),
+        video: document.querySelector('#futureVideo')
+      }
+    ];
 
-    const target = document.querySelector(
-      '[mindar-image-target]'
-    );
 
-    const video = document.querySelector(
-      '#fireVideo'
-    );
+    targets.forEach(({ target, video }) => {
 
-    target.addEventListener(
-      'targetFound',
-      () => {
+      target.addEventListener('targetFound', () => {
+
+        targets.forEach(item => {
+          if (item.video !== video) {
+            item.video.pause();
+          }
+        });
 
         video.currentTime = 0;
 
         video.play().catch(error => {
           console.log('Video play failed:', error);
         });
+      });
 
-      }
-    );
 
-    target.addEventListener(
-      'targetLost',
-      () => {
-
+      target.addEventListener('targetLost', () => {
         video.pause();
+      });
 
-      }
-    );
+    });
+
+
+    /*
+     * Unlock video playback on mobile browsers.
+     */
+    const unlockVideos = () => {
+
+      targets.forEach(({ video }) => {
+
+        video.play()
+          .then(() => {
+            video.pause();
+            video.currentTime = 0;
+          })
+          .catch(() => {});
+
+      });
+
+    };
 
     document.addEventListener(
       'touchstart',
-      () => {
-
-        video.play().catch(() => {});
-
-      },
+      unlockVideos,
       { once: true }
     );
 
     document.addEventListener(
       'click',
-      () => {
-
-        video.play().catch(() => {});
-
-      },
+      unlockVideos,
       { once: true }
     );
 
