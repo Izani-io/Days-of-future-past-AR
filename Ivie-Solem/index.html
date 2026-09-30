@@ -8,53 +8,52 @@
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <script>
-    AFRAME.registerShader('effect-chroma', {
+  AFRAME.registerShader('effect-chroma', {
+    schema: {
+      src: { type: 'map', is: 'uniform' }
+    },
 
-      schema: {
-        src: { type: 'map', is: 'uniform' }
-      },
+    vertexShader: `
+      varying vec2 vUv;
 
-      vertexShader: `
-        varying vec2 vUv;
+      void main() {
+        vUv = uv;
 
-        void main() {
-          vUv = uv;
+        gl_Position =
+          projectionMatrix *
+          modelViewMatrix *
+          vec4(position, 1.0);
+      }
+    `,
 
-          gl_Position =
-            projectionMatrix *
-            modelViewMatrix *
-            vec4(position, 1.0);
+    fragmentShader: `
+      precision mediump float;
+
+      uniform sampler2D src;
+      varying vec2 vUv;
+
+      void main() {
+
+        vec4 color = texture2D(src, vUv);
+
+        float brightness =
+          max(color.r, max(color.g, color.b));
+
+        float alpha = smoothstep(
+          0.02,
+          0.08,
+          brightness
+        );
+
+        if (brightness < 0.02) {
+          discard;
         }
-      `,
 
-      fragmentShader: `
-        precision mediump float;
-
-        uniform sampler2D src;
-        varying vec2 vUv;
-
-        void main() {
-
-          vec4 color = texture2D(src, vUv);
-
-          float brightness =
-            max(color.r, max(color.g, color.b));
-
-          float alpha = smoothstep(
-            0.10,
-            0.30,
-            brightness
-          );
-
-          if (brightness < 0.10) {
-            discard;
-          }
-
-          gl_FragColor = vec4(color.rgb, alpha);
-        }
-      `
-    });
-  </script>
+        gl_FragColor = vec4(color.rgb, alpha);
+      }
+    `
+  });
+</script>
 
 
   <!-- SOUND BUTTON STYLE -->
