@@ -7,7 +7,7 @@
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
-  <script>
+ <script>
   AFRAME.registerShader('effect-chroma', {
     schema: {
       src: { type: 'map', is: 'uniform' }
@@ -33,23 +33,10 @@
       varying vec2 vUv;
 
       void main() {
-
         vec4 color = texture2D(src, vUv);
 
-        float brightness =
-          max(color.r, max(color.g, color.b));
-
-        float alpha = smoothstep(
-          0.02,
-          0.08,
-          brightness
-        );
-
-        if (brightness < 0.02) {
-          discard;
-        }
-
-        gl_FragColor = vec4(color.rgb, alpha);
+        // Keep the entire video, including the black background.
+        gl_FragColor = vec4(color.rgb, 1.0);
       }
     `
   });
@@ -189,13 +176,7 @@
           height: 1.25
         "
 
-        material="
-          shader: effect-chroma;
-          src: #ivieVideo;
-          transparent: true;
-          side: front;
-          depthWrite: false
-        "
+       material="shader: effect-chroma; src: #ivieVideo; transparent: false; side: front"
 
         position="0 0 0.01">
 
@@ -223,13 +204,7 @@
           height: 1.25
         "
 
-        material="
-          shader: effect-chroma;
-          src: #solemVideo;
-          transparent: true;
-          side: front;
-          depthWrite: false
-        "
+       material="shader: effect-chroma; src: #solemVideo; transparent: false; side: front"
 
         position="0 0 0.01">
 
