@@ -235,8 +235,7 @@
       target.addEventListener('targetFound', () => {
 
         /*
-         * Pause every other artwork's video.
-         * Only the currently detected artwork plays.
+         * Pause every other artwork.
          */
 
         targets.forEach(item => {
@@ -249,16 +248,17 @@
 
 
         /*
-         * Start the detected artwork
-         * from the beginning.
+         * Restart the detected artwork.
          */
 
         video.currentTime = 0;
 
+        video.volume = 1;
+
         video.play().catch(error => {
 
           console.log(
-            'Video play failed:',
+            'Audio/video play failed:',
             error
           );
 
@@ -277,12 +277,20 @@
 
 
     /* =====================================================
-       MOBILE VIDEO PLAYBACK UNLOCK
+       UNLOCK AUDIO / VIDEO ON FIRST USER INTERACTION
        ===================================================== */
 
     const unlockVideos = () => {
 
       targets.forEach(({ video }) => {
+
+        /*
+         * Temporarily play the video during the
+         * user's interaction so the browser grants
+         * media playback permission.
+         */
+
+        video.volume = 0;
 
         video.play()
 
@@ -292,9 +300,15 @@
 
             video.currentTime = 0;
 
+            video.volume = 1;
+
           })
 
-          .catch(() => {});
+          .catch(() => {
+
+            video.volume = 1;
+
+          });
 
       });
 
