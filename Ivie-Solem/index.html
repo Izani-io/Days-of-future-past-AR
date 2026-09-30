@@ -4,19 +4,10 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- A-FRAME -->
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-
-  <!-- MINDAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
-
-  <!-- ===================================================== -->
-  <!-- CHROMA / TRANSPARENCY SHADER                          -->
-  <!-- ===================================================== -->
-
   <script>
-
     AFRAME.registerShader('effect-chroma', {
 
       schema: {
@@ -63,13 +54,60 @@
         }
       `
     });
-
   </script>
+
+
+  <!-- SOUND BUTTON STYLE -->
+
+  <style>
+
+    #soundButton {
+
+      position: fixed;
+
+      left: 50%;
+      bottom: 30px;
+
+      transform: translateX(-50%);
+
+      z-index: 9999;
+
+      padding: 14px 24px;
+
+      border: none;
+      border-radius: 30px;
+
+      background: rgba(0, 0, 0, 0.85);
+
+      color: white;
+
+      font-family: Arial, sans-serif;
+
+      font-size: 16px;
+
+      cursor: pointer;
+
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+
+    }
+
+  </style>
 
 </head>
 
 
 <body>
+
+
+  <!-- ===================================================== -->
+  <!-- SOUND ENABLE BUTTON                                   -->
+  <!-- ===================================================== -->
+
+  <button id="soundButton">
+    🔊 Tap to enable sound
+  </button>
+
+
 
   <!-- ===================================================== -->
   <!-- AR SCENE                                               -->
@@ -95,12 +133,10 @@
 
 
     <!-- =================================================== -->
-    <!-- VIDEO ASSETS                                         -->
+    <!-- VIDEOS                                               -->
     <!-- =================================================== -->
 
     <a-assets>
-
-      <!-- IVIE -->
 
       <video
         id="ivieVideo"
@@ -111,8 +147,6 @@
         crossorigin="anonymous">
       </video>
 
-
-      <!-- SOLEM -->
 
       <video
         id="solemVideo"
@@ -126,6 +160,7 @@
     </a-assets>
 
 
+
     <!-- =================================================== -->
     <!-- CAMERA                                               -->
     <!-- =================================================== -->
@@ -136,10 +171,11 @@
     </a-camera>
 
 
+
     <!-- =================================================== -->
-    <!-- 1. IVIE                                              -->
+    <!-- IVIE                                                 -->
     <!-- TARGET 0                                             -->
-    <!-- ARTWORK: 16 × 20 INCHES / 4:5                       -->
+    <!-- 4:5                                                  -->
     <!-- =================================================== -->
 
     <a-entity
@@ -169,10 +205,11 @@
     </a-entity>
 
 
+
     <!-- =================================================== -->
-    <!-- 2. SOLEM                                             -->
+    <!-- SOLEM                                                -->
     <!-- TARGET 1                                             -->
-    <!-- ARTWORK: 16 × 20 INCHES / 4:5                       -->
+    <!-- 4:5                                                  -->
     <!-- =================================================== -->
 
     <a-entity
@@ -205,128 +242,153 @@
   </a-scene>
 
 
+
   <!-- ===================================================== -->
-  <!-- VIDEO / TARGET CONTROL                                -->
+  <!-- VIDEO CONTROL                                         -->
   <!-- ===================================================== -->
 
   <script>
+
+    const ivieVideo =
+      document.querySelector('#ivieVideo');
+
+    const solemVideo =
+      document.querySelector('#solemVideo');
+
+    const soundButton =
+      document.querySelector('#soundButton');
+
+
+    let soundUnlocked = false;
+
 
     const targets = [
 
       {
         target: document.querySelector('#target-ivie'),
-        video: document.querySelector('#ivieVideo')
+        video: ivieVideo
       },
 
       {
         target: document.querySelector('#target-solem'),
-        video: document.querySelector('#solemVideo')
+        video: solemVideo
       }
 
     ];
 
 
+
     /* =====================================================
-       TARGET FOUND / LOST
+       ENABLE AUDIO
        ===================================================== */
 
-    targets.forEach(({ target, video }) => {
+    soundButton.addEventListener('click', async () => {
 
-      target.addEventListener('targetFound', () => {
-
-        /*
-         * Pause every other artwork.
-         */
-
-        targets.forEach(item => {
-
-          if (item.video !== video) {
-            item.video.pause();
-          }
-
-        });
-
+      try {
 
         /*
-         * Restart the detected artwork.
+         * This play() happens DIRECTLY because
+         * the visitor pressed the button.
          */
 
-        video.currentTime = 0;
+        ivieVideo.volume = 1;
+        solemVideo.volume = 1;
 
-        video.volume = 1;
+        await ivieVideo.play();
 
-        video.play().catch(error => {
-
-          console.log(
-            'Audio/video play failed:',
-            error
-          );
-
-        });
-
-      });
+        ivieVideo.pause();
+        ivieVideo.currentTime = 0;
 
 
-      target.addEventListener('targetLost', () => {
+        await solemVideo.play();
 
-        video.pause();
+        solemVideo.pause();
+        solemVideo.currentTime = 0;
 
-      });
+
+        soundUnlocked = true;
+
+        soundButton.innerText = '✓ Sound enabled';
+
+        setTimeout(() => {
+
+          soundButton.style.display = 'none';
+
+        }, 1000);
+
+      }
+
+      catch (error) {
+
+        console.log(
+          'Audio unlock failed:',
+          error
+        );
+
+      }
 
     });
 
 
+
     /* =====================================================
-       UNLOCK AUDIO / VIDEO ON FIRST USER INTERACTION
+       TARGET DETECTION
        ===================================================== */
 
-    const unlockVideos = () => {
+    targets.forEach(({ target, video }) => {
 
-      targets.forEach(({ video }) => {
 
-        /*
-         * Temporarily play the video during the
-         * user's interaction so the browser grants
-         * media playback permission.
-         */
+      target.addEventListener(
+        'targetFound',
+        () => {
 
-        video.volume = 0;
+          /*
+           * Stop the other artwork.
+           */
 
-        video.play()
+          targets.forEach(item => {
 
-          .then(() => {
+            if (item.video !== video) {
 
-            video.pause();
+              item.video.pause();
 
-            video.currentTime = 0;
-
-            video.volume = 1;
-
-          })
-
-          .catch(() => {
-
-            video.volume = 1;
+            }
 
           });
 
-      });
 
-    };
+          /*
+           * Start detected artwork.
+           */
 
+          video.currentTime = 0;
 
-    document.addEventListener(
-      'touchstart',
-      unlockVideos,
-      { once: true }
-    );
+          video.volume = 1;
 
 
-    document.addEventListener(
-      'click',
-      unlockVideos,
-      { once: true }
-    );
+          video.play().catch(error => {
+
+            console.log(
+              'Video/audio playback failed:',
+              error
+            );
+
+          });
+
+        }
+      );
+
+
+      target.addEventListener(
+        'targetLost',
+        () => {
+
+          video.pause();
+
+        }
+      );
+
+    });
 
   </script>
 
