@@ -1,58 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
 
-  <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width,
-             initial-scale=1.0,
-             maximum-scale=1.0,
-             user-scalable=no">
-
-  <title>Ivie & Solem — AR</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- A-FRAME -->
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
 
   <!-- MINDAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
 
-  <!-- ========================================================= -->
-  <!-- YOUR EXISTING EFFECT-CHROMA SHADER                        -->
-  <!-- ========================================================= -->
-  <!--
-       COPY THE SAME effect-chroma SHADER FROM YOUR
-       DAYS OF FUTURE PAST index.html HERE.
-
-       Do NOT change the shader if it is already working correctly.
-  -->
-
-
-  <!-- Example location:
+  <!-- ===================================================== -->
+  <!-- CHROMA / TRANSPARENCY SHADER                          -->
+  <!-- ===================================================== -->
 
   <script>
+
     AFRAME.registerShader('effect-chroma', {
+
       schema: {
-        src: { type: 'map' }
+        src: { type: 'map', is: 'uniform' }
       },
 
-      ...
+      vertexShader: `
+        varying vec2 vUv;
+
+        void main() {
+          vUv = uv;
+
+          gl_Position =
+            projectionMatrix *
+            modelViewMatrix *
+            vec4(position, 1.0);
+        }
+      `,
+
+      fragmentShader: `
+        precision mediump float;
+
+        uniform sampler2D src;
+        varying vec2 vUv;
+
+        void main() {
+
+          vec4 color = texture2D(src, vUv);
+
+          float brightness =
+            max(color.r, max(color.g, color.b));
+
+          float alpha = smoothstep(
+            0.10,
+            0.30,
+            brightness
+          );
+
+          if (brightness < 0.10) {
+            discard;
+          }
+
+          gl_FragColor = vec4(color.rgb, alpha);
+        }
+      `
     });
+
   </script>
-
-  -->
-
 
 </head>
 
 
 <body>
+
+  <!-- ===================================================== -->
+  <!-- AR SCENE                                               -->
+  <!-- ===================================================== -->
 
   <a-scene
 
@@ -66,23 +87,20 @@
 
     color-space="sRGB"
 
-    renderer="
-      colorManagement: true;
-      physicallyCorrectLights: false
-    "
+    renderer="colorManagement: true"
 
     vr-mode-ui="enabled: false"
 
     device-orientation-permission-ui="enabled: false">
 
 
-    <!-- ======================================================= -->
-    <!-- ASSETS                                                   -->
-    <!-- ======================================================= -->
+    <!-- =================================================== -->
+    <!-- VIDEO ASSETS                                         -->
+    <!-- =================================================== -->
 
     <a-assets>
 
-      <!-- IVIE VIDEO -->
+      <!-- IVIE -->
 
       <video
         id="ivieVideo"
@@ -95,7 +113,7 @@
       </video>
 
 
-      <!-- SOLEM VIDEO -->
+      <!-- SOLEM -->
 
       <video
         id="solemVideo"
@@ -110,12 +128,21 @@
     </a-assets>
 
 
+    <!-- =================================================== -->
+    <!-- CAMERA                                               -->
+    <!-- =================================================== -->
 
-    <!-- ======================================================= -->
-    <!-- IVIE                                                     -->
-    <!-- TARGET 0                                                 -->
-    <!-- ARTWORK RATIO: 4:5                                       -->
-    <!-- ======================================================= -->
+    <a-camera
+      position="0 0 0"
+      look-controls="enabled: false">
+    </a-camera>
+
+
+    <!-- =================================================== -->
+    <!-- 1. IVIE                                              -->
+    <!-- TARGET 0                                             -->
+    <!-- ARTWORK: 16 × 20 INCHES / 4:5                       -->
+    <!-- =================================================== -->
 
     <a-entity
       id="target-ivie"
@@ -144,12 +171,11 @@
     </a-entity>
 
 
-
-    <!-- ======================================================= -->
-    <!-- SOLEM                                                    -->
-    <!-- TARGET 1                                                 -->
-    <!-- ARTWORK RATIO: 4:5                                       -->
-    <!-- ======================================================= -->
+    <!-- =================================================== -->
+    <!-- 2. SOLEM                                             -->
+    <!-- TARGET 1                                             -->
+    <!-- ARTWORK: 16 × 20 INCHES / 4:5                       -->
+    <!-- =================================================== -->
 
     <a-entity
       id="target-solem"
@@ -178,86 +204,120 @@
     </a-entity>
 
 
-
-    <!-- ======================================================= -->
-    <!-- CAMERA                                                    -->
-    <!-- ======================================================= -->
-
-    <a-camera
-      position="0 0 0"
-      look-controls="enabled: false">
-    </a-camera>
-
-
   </a-scene>
 
 
-
-  <!-- ========================================================= -->
-  <!-- TARGET / VIDEO CONTROL                                    -->
-  <!-- ========================================================= -->
+  <!-- ===================================================== -->
+  <!-- VIDEO / TARGET CONTROL                                -->
+  <!-- ===================================================== -->
 
   <script>
 
-    const ivieVideo =
-      document.querySelector('#ivieVideo');
+    const targets = [
 
-    const solemVideo =
-      document.querySelector('#solemVideo');
+      {
+        target: document.querySelector('#target-ivie'),
+        video: document.querySelector('#ivieVideo')
+      },
+
+      {
+        target: document.querySelector('#target-solem'),
+        video: document.querySelector('#solemVideo')
+      }
+
+    ];
 
 
-    const ivieTarget =
-      document.querySelector('#target-ivie');
+    /* =====================================================
+       TARGET FOUND / LOST
+       ===================================================== */
 
-    const solemTarget =
-      document.querySelector('#target-solem');
+    targets.forEach(({ target, video }) => {
+
+      target.addEventListener('targetFound', () => {
+
+        /*
+         * Pause every other artwork's video.
+         * Only the currently detected artwork plays.
+         */
+
+        targets.forEach(item => {
+
+          if (item.video !== video) {
+            item.video.pause();
+          }
+
+        });
 
 
+        /*
+         * Start the detected artwork
+         * from the beginning.
+         */
 
-    /* =========================================================
-       IVIE
-       ========================================================= */
+        video.currentTime = 0;
 
-    ivieTarget.addEventListener('targetFound', () => {
+        video.play().catch(error => {
 
-      ivieVideo.currentTime = 0;
+          console.log(
+            'Video play failed:',
+            error
+          );
 
-      ivieVideo.play().catch(() => {});
+        });
+
+      });
+
+
+      target.addEventListener('targetLost', () => {
+
+        video.pause();
+
+      });
 
     });
 
 
-    ivieTarget.addEventListener('targetLost', () => {
+    /* =====================================================
+       MOBILE VIDEO PLAYBACK UNLOCK
+       ===================================================== */
 
-      ivieVideo.pause();
+    const unlockVideos = () => {
 
-    });
+      targets.forEach(({ video }) => {
+
+        video.play()
+
+          .then(() => {
+
+            video.pause();
+
+            video.currentTime = 0;
+
+          })
+
+          .catch(() => {});
+
+      });
+
+    };
 
 
-
-    /* =========================================================
-       SOLEM
-       ========================================================= */
-
-    solemTarget.addEventListener('targetFound', () => {
-
-      solemVideo.currentTime = 0;
-
-      solemVideo.play().catch(() => {});
-
-    });
+    document.addEventListener(
+      'touchstart',
+      unlockVideos,
+      { once: true }
+    );
 
 
-    solemTarget.addEventListener('targetLost', () => {
-
-      solemVideo.pause();
-
-    });
-
+    document.addEventListener(
+      'click',
+      unlockVideos,
+      { once: true }
+    );
 
   </script>
 
 
 </body>
-
 </html>
