@@ -1,1 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,
+             initial-scale=1.0,
+             maximum-scale=1.0,
+             user-scalable=no">
+
+  <title>Ivie & Solem — AR</title>
+
+
+  <!-- A-FRAME -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
+
+  <!-- MINDAR -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+
+  <!-- ========================================================= -->
+  <!-- YOUR EXISTING EFFECT-CHROMA SHADER                        -->
+  <!-- ========================================================= -->
+  <!--
+       COPY THE SAME effect-chroma SHADER FROM YOUR
+       DAYS OF FUTURE PAST index.html HERE.
+
+       Do NOT change the shader if it is already working correctly.
+  -->
+
+
+  <!-- Example location:
+
+  <script>
+    AFRAME.registerShader('effect-chroma', {
+      schema: {
+        src: { type: 'map' }
+      },
+
+      ...
+    });
+  </script>
+
+  -->
+
+
+</head>
+
+
+<body>
+
+  <a-scene
+
+    mindar-image="
+      imageTargetSrc: ./collection.mind;
+      filterMinCF: 0.0001;
+      filterBeta: 1000;
+      warmupTolerance: 5;
+      missTolerance: 5;
+    "
+
+    color-space="sRGB"
+
+    renderer="
+      colorManagement: true;
+      physicallyCorrectLights: false
+    "
+
+    vr-mode-ui="enabled: false"
+
+    device-orientation-permission-ui="enabled: false">
+
+
+    <!-- ======================================================= -->
+    <!-- ASSETS                                                   -->
+    <!-- ======================================================= -->
+
+    <a-assets>
+
+      <!-- IVIE VIDEO -->
+
+      <video
+        id="ivieVideo"
+        src="./ivie-effect.mp4"
+        loop
+        muted
+        playsinline
+        webkit-playsinline
+        crossorigin="anonymous">
+      </video>
+
+
+      <!-- SOLEM VIDEO -->
+
+      <video
+        id="solemVideo"
+        src="./solem-effect.mp4"
+        loop
+        muted
+        playsinline
+        webkit-playsinline
+        crossorigin="anonymous">
+      </video>
+
+    </a-assets>
+
+
+
+    <!-- ======================================================= -->
+    <!-- IVIE                                                     -->
+    <!-- TARGET 0                                                 -->
+    <!-- ARTWORK RATIO: 4:5                                       -->
+    <!-- ======================================================= -->
+
+    <a-entity
+      id="target-ivie"
+      mindar-image-target="targetIndex: 0">
+
+      <a-entity
+
+        geometry="
+          primitive: plane;
+          width: 1;
+          height: 1.25
+        "
+
+        material="
+          shader: effect-chroma;
+          src: #ivieVideo;
+          transparent: true;
+          side: front;
+          depthWrite: false
+        "
+
+        position="0 0 0.01">
+
+      </a-entity>
+
+    </a-entity>
+
+
+
+    <!-- ======================================================= -->
+    <!-- SOLEM                                                    -->
+    <!-- TARGET 1                                                 -->
+    <!-- ARTWORK RATIO: 4:5                                       -->
+    <!-- ======================================================= -->
+
+    <a-entity
+      id="target-solem"
+      mindar-image-target="targetIndex: 1">
+
+      <a-entity
+
+        geometry="
+          primitive: plane;
+          width: 1;
+          height: 1.25
+        "
+
+        material="
+          shader: effect-chroma;
+          src: #solemVideo;
+          transparent: true;
+          side: front;
+          depthWrite: false
+        "
+
+        position="0 0 0.01">
+
+      </a-entity>
+
+    </a-entity>
+
+
+
+    <!-- ======================================================= -->
+    <!-- CAMERA                                                    -->
+    <!-- ======================================================= -->
+
+    <a-camera
+      position="0 0 0"
+      look-controls="enabled: false">
+    </a-camera>
+
+
+  </a-scene>
+
+
+
+  <!-- ========================================================= -->
+  <!-- TARGET / VIDEO CONTROL                                    -->
+  <!-- ========================================================= -->
+
+  <script>
+
+    const ivieVideo =
+      document.querySelector('#ivieVideo');
+
+    const solemVideo =
+      document.querySelector('#solemVideo');
+
+
+    const ivieTarget =
+      document.querySelector('#target-ivie');
+
+    const solemTarget =
+      document.querySelector('#target-solem');
+
+
+
+    /* =========================================================
+       IVIE
+       ========================================================= */
+
+    ivieTarget.addEventListener('targetFound', () => {
+
+      ivieVideo.currentTime = 0;
+
+      ivieVideo.play().catch(() => {});
+
+    });
+
+
+    ivieTarget.addEventListener('targetLost', () => {
+
+      ivieVideo.pause();
+
+    });
+
+
+
+    /* =========================================================
+       SOLEM
+       ========================================================= */
+
+    solemTarget.addEventListener('targetFound', () => {
+
+      solemVideo.currentTime = 0;
+
+      solemVideo.play().catch(() => {});
+
+    });
+
+
+    solemTarget.addEventListener('targetLost', () => {
+
+      solemVideo.pause();
+
+    });
+
+
+  </script>
+
+
+</body>
+
+</html>
